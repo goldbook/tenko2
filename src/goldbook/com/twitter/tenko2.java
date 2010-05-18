@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Locale;
 
 import android.app.Activity;
+import android.database.CursorIndexOutOfBoundsException;
 import android.location.Address;
 import android.location.Criteria;
 import android.location.Geocoder;
@@ -16,6 +17,7 @@ import android.text.util.Linkify;
 import android.widget.TextView;
 
 public class tenko2 extends Activity implements LocationListener {
+	private static final String NULLPO = "ぬるぽいんと（恐らくGPS情報の取得失敗）";
 	private static final String YOHOKU = "yohoku.sqlite";
 
 	/** Called when the activity is first created. */
@@ -36,13 +38,14 @@ public class tenko2 extends Activity implements LocationListener {
 
 		// ジオコーダに渡して住所を取得
 		Geocoder geocoder = new Geocoder(this, Locale.JAPAN);
+		Address address = null;
 		try {
 			List<Address> list = geocoder.getFromLocation(location
 					.getLatitude(), location.getLongitude(), 5);
 
-			Address address = list.get(0);
+			address = list.get(0);
 			int i = 0;
-			while((address = list.get(i++)).getLocality() == null){
+			while ((address = list.get(i++)).getLocality() == null) {
 
 			}
 
@@ -65,10 +68,23 @@ public class tenko2 extends Activity implements LocationListener {
 
 			// 位置取得終了
 			manager.removeUpdates(this);
+
+		}catch (CursorIndexOutOfBoundsException e){
+			dispText("予報区の特定ができませんでした\n"+address.getAddressLine(1));
+		} catch (NullPointerException e) {
+			dispText(NULLPO);
+
 		} catch (IOException e) {
 			// TODO 自動生成された catch ブロック
 			e.printStackTrace();
+
 		}
+	}
+
+	private void dispText(String text) {
+		TextView tv = new TextView(this);
+		tv.setText(text);
+		setContentView(tv);
 	}
 
 	public void onLocationChanged(Location location) {
